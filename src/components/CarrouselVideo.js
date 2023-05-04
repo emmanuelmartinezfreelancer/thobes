@@ -1,8 +1,26 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Image from 'next/image'
 import YouTube from 'react-youtube';
 
 const CarrouselVideo = ({ setCurrentIndex, setbgmodalImage, setmodalImage, setImagesCarousel, handleLeftClick, images, setvideoIdFull }) => {
+
+  const galleryRef = useRef(null);
+
+  const [thumbnailLoaded, setThumbnailLoaded] = useState(
+    Array.from({ length: images.length }, () => false)
+  );
+  const [thumbnailsSlice, setThumbnailsSlice ] = useState([])
+
+  useEffect(() => {
+    const gallery = galleryRef.current;
+    const handleTransitionEnd = () => {
+      gallery.classList.remove('transitioning');
+    };
+    gallery.addEventListener('transitionend', handleTransitionEnd);
+    return () => {
+      gallery.removeEventListener('transitionend', handleTransitionEnd);
+    };
+  }, []);
 
   const handleClick = (index) => {
     setCurrentIndex(index);
@@ -12,11 +30,13 @@ const CarrouselVideo = ({ setCurrentIndex, setbgmodalImage, setmodalImage, setIm
   const [startIndex, setStartIndex] = useState(0);
 
   const handleNext = () => {
-    setStartIndex(startIndex + 5);
+    setStartIndex(startIndex + 3);
+    galleryRef.current.classList.add('transitioning');
   };
 
   const handlePrev = () => {
-    setStartIndex(startIndex - 5);
+    setStartIndex(startIndex - 3);
+    galleryRef.current.classList.add('transitioning');
   };
 
 const currentImages = images.slice(startIndex, startIndex + 5);
@@ -35,34 +55,33 @@ const onPlayerReady = (event) => {
   event.target.pauseVideo();
 }
 
+const handleReady = (index) => (event) => {
+  event.target.pauseVideo(); // pause the video to prevent autoplay
+  setThumbnailLoaded((prev) =>
+    prev.map((loaded, i) => (i === index ? true : loaded))
+  ); // set thumbnailLoaded to true for the corresponding video index
+};
+
 console.log("images", images)
   return (
     <>
-    <div className="carousel flex w-full">
+    <div className="gallery flex w-full" ref={galleryRef}>
+
+    {startIndex > 0 && (
     <button 
       className="text-4xl w-[40px] text-white bg-black shadow-black shadow-xl bg-opacity-100"
       onClick={handlePrev}
       >
       {"<"}
     </button>
-      <div className="flex flex-row flex-wrap w-full gap-3 pl-3">
+    )}
+
+      <div className="images flex flex-row flex-wrap w-full gap-3 pl-3 pr-3">
+
       
-      {currentImages.map((image,index) => (
+      { currentImages.map((image,index) => (
         <>
-{/*         <div
-            onClick={() => 
-              {
-              handleClick(index);
-              setmodalImage(true)
-              }
-            }
-            key={index}
-            className="w-full w-[300px] h-[300px] bg-cover bg-center cursor-pointer transition duration-500 ease-in-out transform hover:-translate-y-1 hover:scale-105"
-             style={{ 
-                backgroundImage: `url("${image}")`,
-              }} 
-            >
-            </div>  */}
+            {!thumbnailLoaded[index] && <p className="bg-black text-white text-center align-center w-[320px] h-[240]">Loading...</p>}
             <YouTube 
             className="cursor-pointer transition duration-500 ease-in-out transform hover:-translate-y-1 hover:scale-105"
             onClick={(e) => 
@@ -71,33 +90,33 @@ console.log("images", images)
               setmodalImage(true)
               console.log("e", e)
 
+              }            
               }
-              
-            }
             onPlay={(e)=>{ 
               setvideoIdFull(image); 
               handleClick(index);
               setmodalImage(true)     
               onPlayerReady(e)
             }}  
-            key={index} videoId={image} opts={opts} onReady={onPlayerReady} />
+            key={index} videoId={image} opts={opts} onReady={handleReady(index)} />
         </>
 
       ))}
 
       
       </div>
+      {startIndex + 5 < images.length && (
       <button 
       className="text-4xl w-[40px] text-white bg-black shadow-black shadow-xl bg-opacity-100"
       onClick={handleNext}
       >
       {">"}
-    </button>
+      </button>
+      )}
 
     </div>
     </>
 
-    
   );
 };
 
