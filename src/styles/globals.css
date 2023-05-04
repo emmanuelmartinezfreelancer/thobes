@@ -27,20 +27,13 @@ body {
 }
 
 .gallery {
-  position: relative;
-  overflow: hidden;
+  transition: transform 0.5s ease-in-out;
 }
 
 .images {
-  display: flex;
   transition: transform 0.5s ease-out;
 }
 
 .images.transitioning {
   transition: transform 0.5s cubic-bezier(0.165, 0.84, 0.44, 1);
-}
-
-.images img {
-  flex: 0 0 20%;
-  margin-right: 1rem;
 }

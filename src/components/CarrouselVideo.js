@@ -31,12 +31,12 @@ const CarrouselVideo = ({ setCurrentIndex, setbgmodalImage, setmodalImage, setIm
 
   const handleNext = () => {
     setStartIndex(startIndex + 3);
-    galleryRef.current.classList.add('transitioning');
+
   };
 
   const handlePrev = () => {
     setStartIndex(startIndex - 3);
-    galleryRef.current.classList.add('transitioning');
+
   };
 
 const currentImages = images.slice(startIndex, startIndex + 5);
@@ -47,6 +47,9 @@ const opts = {
   playerVars: {
     // https://developers.google.com/youtube/player_parameters
     autoplay: 0,
+  },
+  playerVars: {
+    controls: 0,
   },
 };
 
@@ -62,7 +65,43 @@ const handleReady = (index) => (event) => {
   ); // set thumbnailLoaded to true for the corresponding video index
 };
 
-console.log("images", images)
+
+const renderVideo = (videoId, index) => {
+  const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+  return (
+    <>
+      {!thumbnailLoaded[index] && (
+        //<p className="bg-black text-white text-center align-center w-[320px] h-[240]">Loading...</p>
+        <div className="bg-contain bg-center absolute"
+        style={
+          {
+          width: '320px',
+          height: '240px',
+          background: `url("${thumbnailUrl}")`,
+          }}
+        ></div>
+      )}
+      <YouTube
+        className="cursor-pointer transition duration-500 ease-in-out transform hover:-translate-y-1 hover:scale-105"
+        onClick={() => {
+          handleClick(index);
+          setmodalImage(true)
+          console.log("e", e)
+        }}
+        onPlay={(e) => {
+          setvideoIdFull(videoId); 
+          handleClick(index);
+          setmodalImage(true)     
+          onPlayerReady(e)
+        }}
+        key={index}
+        videoId={videoId}
+        opts={opts}
+        onReady={handleReady(index)}
+      />
+    </>
+  );
+};
   return (
     <>
     <div className="gallery flex w-full" ref={galleryRef}>
@@ -80,7 +119,7 @@ console.log("images", images)
 
       
       { currentImages.map((image,index) => (
-        <>
+/*         <>
             {!thumbnailLoaded[index] && <p className="bg-black text-white text-center align-center w-[320px] h-[240]">Loading...</p>}
             <YouTube 
             className="cursor-pointer transition duration-500 ease-in-out transform hover:-translate-y-1 hover:scale-105"
@@ -99,7 +138,12 @@ console.log("images", images)
               onPlayerReady(e)
             }}  
             key={index} videoId={image} opts={opts} onReady={handleReady(index)} />
-        </>
+        </> */
+
+        <div key={index}>
+          
+        {renderVideo(image, index)}
+      </div>
 
       ))}
 
