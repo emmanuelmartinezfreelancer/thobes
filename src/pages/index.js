@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google'
 import CarrouselVideo from "@/components/CarrouselVideo";
 import { useState } from "react";
 import YouTube from 'react-youtube';
+import Exporter from '@/components/Exporter';
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -109,7 +110,9 @@ const opts = {
           setvideoIdFull={setvideoIdFull}
           />   
 
-      </div>
+    </div>
+
+    <div className="flex  flex-col w-full  bg-[#c2b2bb] h-fit pb-48 mt-14"><Exporter /></div>
 
     </main>
   )

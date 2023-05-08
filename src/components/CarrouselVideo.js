@@ -83,6 +83,7 @@ const renderVideo = (videoId, index) => {
       )}
       <YouTube
         className="cursor-pointer transition duration-500 ease-in-out transform hover:-translate-y-1 hover:scale-105"
+        
         onClick={() => {
           handleClick(index);
           setmodalImage(true)
@@ -104,7 +105,7 @@ const renderVideo = (videoId, index) => {
 };
   return (
     <>
-    <div className="gallery flex w-full" ref={galleryRef}>
+    <div className="gallery flex w-full " ref={galleryRef} >
 
     {startIndex > 0 && (
     <button 
@@ -115,7 +116,7 @@ const renderVideo = (videoId, index) => {
     </button>
     )}
 
-      <div className="images flex flex-row flex-wrap w-full gap-3 pl-3 pr-3">
+      <div className="images flex flex-row flex-wrap w-full gap-3 pl-3 pr-3" >
 
       
       { currentImages.map((image,index) => (
