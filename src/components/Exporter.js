@@ -66,48 +66,59 @@ const Exporter = () => {
       };
 
 
-    function drawImagesPeriodically(images) {
+      function drawImagesPeriodically(images) {
         const ctx = canvasVideo.getContext('2d');
         let currentIndex = 0;
         let intervalId = null;
+        let alpha = 0; // The opacity of the current image
+        let durationImageScene = 1.5; //Set a value in between (1 and 2) for the duration of each image here
+        let fps = 16; // Set the desired FPS for the animation here, 16 is assuming a 60fps refresh rate
+        let prevIndex = 0;
       
-        function startDrawing() {
-            intervalId = setInterval(() => {
-              // Clear the canvas before drawing the next image
-              ctx.clearRect(0, 0, canvasVideo.width, canvasVideo.height);
-        
-              // Draw the current image, adjusted to fit the canvas
-              const currentImage = images[currentIndex];
-              const destWidth = canvasVideo.width;
-              const destHeight = canvasVideo.height;
-              const sourceWidth = currentImage.width;
-              const sourceHeight = currentImage.height;
-              const aspectRatio = sourceWidth / sourceHeight;
-        
-              if (destWidth / destHeight > aspectRatio) {
-                // The canvas is wider than the image, adjust the height
-                const destX = 0;
-                const destY = (destHeight - destWidth / aspectRatio) / 2;
-                ctx.drawImage(currentImage, destX, destY, destWidth, destWidth / aspectRatio);
-              } else {
-                // The canvas is taller than the image, adjust the width
-                const destX = (destWidth - destHeight * aspectRatio) / 2;
-                const destY = 0;
-                ctx.drawImage(currentImage, destX, destY, destHeight * aspectRatio, destHeight);
-              }
-        
-              // Increment the current index, or wrap around to 0 if we've reached the end of the array
-              currentIndex = currentIndex === images.length - 1 ? 0 : currentIndex + 1;
-        
-              // Stop the interval if we've reached the end of the array
-              if (currentIndex === images.length - 1) {
-                clearInterval(intervalId);
-                stopRecording();
-              }
-            }, 1000); // Change this value to adjust the time interval between images
+        function draw() {
+          // Clear the canvas before drawing the next frame
+          ctx.clearRect(0, 0, canvasVideo.width, canvasVideo.height);
+      
+          // Draw the previous image, fully opaque
+          if(currentIndex !== 0){
+
+            prevIndex = currentIndex === 0 ? images.length - 1 : currentIndex - 1;
+            
+          }
+
+          ctx.drawImage(images[prevIndex], 0, 0, canvasVideo.width, canvasVideo.height);
+      
+          // Draw the current image, with a fading effect
+          ctx.save();
+          ctx.globalAlpha = alpha;
+          ctx.drawImage(images[currentIndex], 0, 0, canvasVideo.width, canvasVideo.height);
+          ctx.restore();
+      
+          // Increment the alpha value for the current image
+          alpha += 0.01;
+          if (alpha > durationImageScene) {
+            // Reset the alpha value and move on to the next image
+            
+            alpha = 0;
+            currentIndex = currentIndex === images.length - 1 ? 0 : currentIndex + 1;
+      
+            if (currentIndex === 0) {
+              // Stop the animation loop if we've reached the final image
+              clearInterval(intervalId);
+              stopRecording()
+              return;
+            }
           }
     
-    function stopDrawing() {
+        }
+      
+        function startDrawing() {
+          // Start the animation loop
+          intervalId = setInterval(draw, fps); 
+        }
+      
+        function stopDrawing() {
+          // Stop the animation loop
           clearInterval(intervalId);
         }
       
