@@ -78,30 +78,39 @@ const Exporter = () => {
         function draw() {
           // Clear the canvas before drawing the next frame
           ctx.clearRect(0, 0, canvasVideo.width, canvasVideo.height);
-      
+        
           // Draw the previous image, fully opaque
           if(currentIndex !== 0){
-
             prevIndex = currentIndex === 0 ? images.length - 1 : currentIndex - 1;
-            
           }
-
-          ctx.drawImage(images[prevIndex], 0, 0, canvasVideo.width, canvasVideo.height);
-      
+          ctx.drawImage(images[prevIndex].img, 0, 0, canvasVideo.width, canvasVideo.height);
+        
           // Draw the current image, with a fading effect
           ctx.save();
           ctx.globalAlpha = alpha;
-          ctx.drawImage(images[currentIndex], 0, 0, canvasVideo.width, canvasVideo.height);
+          ctx.drawImage(images[currentIndex].img, 0, 0, canvasVideo.width, canvasVideo.height);
           ctx.restore();
-      
+        
+          // Draw the text box with custom text on the bottom of the canvas
+          ctx.fillStyle = 'yellow';
+          ctx.fillRect(0, canvasVideo.height - 50, canvasVideo.width, 50);
+          ctx.fillStyle = 'black';
+          ctx.font = 'bold 30px courier';
+          ctx.textAlign = 'center'; // Add this line to center the text
+          ctx.fillText(images[currentIndex].text, canvasVideo.width / 2, canvasVideo.height - 18);
+        
+          // Draw a black border around the text box
+          ctx.strokeStyle = 'black';
+          ctx.lineWidth = 3;
+          ctx.strokeRect(1, canvasVideo.height - 49, canvasVideo.width - 2, 48);
+        
           // Increment the alpha value for the current image
           alpha += 0.01;
           if (alpha > durationImageScene) {
             // Reset the alpha value and move on to the next image
-            
             alpha = 0;
             currentIndex = currentIndex === images.length - 1 ? 0 : currentIndex + 1;
-      
+        
             if (currentIndex === 0) {
               // Stop the animation loop if we've reached the final image
               clearInterval(intervalId);
@@ -109,8 +118,9 @@ const Exporter = () => {
               return;
             }
           }
-    
         }
+        
+        
       
         function startDrawing() {
           // Start the animation loop
@@ -133,19 +143,20 @@ const Exporter = () => {
 
       function handleFileInputChange(event) {
         const files = event.target.files;
-    
+      
         // Convert the FileList to an array of Image objects
-        const images = Array.from(files).map(file => {
-          const image = new Image();
-          image.src = URL.createObjectURL(file);
-          return image;
+        const images = Array.from(files).map((file, i) => {
+          const img = new Image();
+          img.src = URL.createObjectURL(file);
+          const text = prompt(`Image ${i + 1}: Enter the text to be displayed on the canvas`);
+          return { img, text };
         });
-    
+      
         // Draw the images periodically in the canvas
-        const stopDrawing = drawImagesPeriodically(images, canvasVideo);
-
-        startRecording()
-    
+        const stopDrawing = drawImagesPeriodically(images);
+      
+        startRecording();
+      
         // Clean up the interval when the component unmounts or when the images change
         return () => {
           stopDrawing();
