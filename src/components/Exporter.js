@@ -11,7 +11,32 @@ const Exporter = () => {
     const [videoBlob, setVideoBlob] = useState(null);
 
     const [image2Canvas, setimage2Canvas] = useState("./1.JPG");
-    
+
+    const [scenes, setscenes] = useState([{
+                              sentence: "A place full of misty clouds\nand text collages everywhere",
+                              src: "https://firebasestorage.googleapis.com/v0/b/bienal-barco-02.appspot.com/o/artworks%2F1793-1794_alberto-baez.jpg?alt=media&token=7cbf5408-6b30-4b80-8b1b-d852c8f2680b",
+                              anim: 'zoom-in',
+                              duration: 1000
+                              },
+                              {
+                              sentence: "A chalk-white stone in a dark\nand untidy cyclorama",
+                              src: "https://firebasestorage.googleapis.com/v0/b/bienal-barco-02.appspot.com/o/artworks%2F95avgz%40gmail.comNegativo%20de%20un%20Abrazo%201.jpg?alt=media&token=03a15c60-0b8a-4e6c-b993-dc684fa08e57",
+                              anim: 'zoom-in',
+                              duration: 1000
+                              },
+                              {
+                              sentence: "A rose painted in oil style,\nreminiscent of Frida Kahlo's\nearly works,on a\nyellow background.",
+                              src: "https://firebasestorage.googleapis.com/v0/b/bienal-barco-02.appspot.com/o/artworks%2FAnthurium%20andreadnum%202022%20o%CC%81leo%20sobre%20lienzo%2030%20x%2030%20cm%20Tanya%20Huntington.jpg?alt=media&token=2c8a7bdf-00f8-4913-be51-43cd2a2bd7a8",
+                              anim: 'zoom-in',
+                              duration: 1000
+                              },
+                              {
+                              sentence: "An abstract jungle full of\nstrange characters, everything\nfeels strangely alive.",
+                              src: "https://firebasestorage.googleapis.com/v0/b/bienal-barco-02.appspot.com/o/artworks%2F23_3.jpg?alt=media&token=e4628d95-35c2-4ada-8525-55ce9d0d0867",
+                              anim: 'zoom-in',
+                              duration: 1000
+                              }
+                              ]);  
 
     useEffect(() => {
         
@@ -67,11 +92,12 @@ const Exporter = () => {
 
 
       function drawImagesPeriodically(images) {
+
         const ctx = canvasVideo.getContext('2d');
         let currentIndex = 0;
         let intervalId = null;
         let alpha = 0; // The opacity of the current image
-        let durationImageScene = 1.5; //Set a value in between (1 and 2) for the duration of each image here
+        let durationImageScene = 2.2; //Set a value in between (1 and 2) for the duration of each image here
         let fps = 16; // Set the desired FPS for the animation here, 16 is assuming a 60fps refresh rate
         let prevIndex = 0;
       
@@ -80,7 +106,7 @@ const Exporter = () => {
           ctx.clearRect(0, 0, canvasVideo.width, canvasVideo.height);
         
           // Draw the previous image, fully opaque
-          if(currentIndex !== 0){
+          if (currentIndex !== 0) {
             prevIndex = currentIndex === 0 ? images.length - 1 : currentIndex - 1;
           }
           ctx.drawImage(images[prevIndex].img, 0, 0, canvasVideo.width, canvasVideo.height);
@@ -91,18 +117,35 @@ const Exporter = () => {
           ctx.drawImage(images[currentIndex].img, 0, 0, canvasVideo.width, canvasVideo.height);
           ctx.restore();
         
-          // Draw the text box with custom text on the bottom of the canvas
-          ctx.fillStyle = 'yellow';
-          ctx.fillRect(0, canvasVideo.height - 50, canvasVideo.width, 50);
-          ctx.fillStyle = 'black';
-          ctx.font = 'bold 30px courier';
-          ctx.textAlign = 'center'; // Add this line to center the text
-          ctx.fillText(images[currentIndex].text, canvasVideo.width / 2, canvasVideo.height - 18);
+          const yellowBoxWidth = (canvasVideo.width * 1.2) / 2;
+          const yellowBoxHeight = 85;
+          const yellowBoxX = (canvasVideo.width - yellowBoxWidth) / 2;
+          const yellowBoxY = canvasVideo.height - (canvasVideo.height * 0.1) - yellowBoxHeight;
         
-          // Draw a black border around the text box
+          // Draw the yellow background
+          ctx.fillStyle = 'yellow';
+          ctx.fillRect(yellowBoxX, yellowBoxY, yellowBoxWidth, yellowBoxHeight);
+        
+          // Draw the black border around the yellow background
           ctx.strokeStyle = 'black';
           ctx.lineWidth = 3;
-          ctx.strokeRect(1, canvasVideo.height - 49, canvasVideo.width - 2, 48);
+          ctx.strokeRect(yellowBoxX + 1, yellowBoxY, yellowBoxWidth - 2, yellowBoxHeight);
+        
+          // Split the text into lines based on line breaks
+          const textLines = images[currentIndex].sentence.split('\n');
+        
+          // Calculate the vertical position to center the text within the yellow background
+          const lineHeight = 16;
+          const textY = yellowBoxY + (yellowBoxHeight - textLines.length * lineHeight) / 2 + lineHeight;
+        
+          // Draw the text with line breaks
+          ctx.fillStyle = 'black';
+          ctx.font = '14px courier';
+          ctx.textAlign = 'center';
+        
+          textLines.forEach((line, index) => {
+            ctx.fillText(line, yellowBoxX + yellowBoxWidth / 2, textY + index * lineHeight);
+          });
         
           // Increment the alpha value for the current image
           alpha += 0.01;
@@ -114,7 +157,7 @@ const Exporter = () => {
             if (currentIndex === 0) {
               // Stop the animation loop if we've reached the final image
               clearInterval(intervalId);
-              stopRecording()
+              stopRecording();
               return;
             }
           }
@@ -142,6 +185,7 @@ const Exporter = () => {
       }
 
       function handleFileInputChange(event) {
+
         const files = event.target.files;
       
         // Convert the FileList to an array of Image objects
@@ -161,18 +205,49 @@ const Exporter = () => {
         return () => {
           stopDrawing();
         };
+      } 
+
+      async function loadImageFromUrl(url, sentence) {
+        return fetch(url)
+          .then((response) => response.blob())
+          .then((blob) => {
+            const img = new Image();
+            img.src = URL.createObjectURL(blob);
+            return { img, sentence };
+          });
       }
-      
+
+      function handleScenes(arrayScenes) {
+
+        const promises = arrayScenes.map((scene, i) => {
+          const text = scene.sentence;
+          return loadImageFromUrl(scene.src, text);
+        });
+        
+        Promise.all(promises).then((images) => {
+          // Draw the images periodically in the canvas
+          const stopDrawing = drawImagesPeriodically(images);
+        
+          startRecording();
+
+          console.log("Images from new", images)
+        
+        // Clean up the interval when the component unmounts or when the images change
+       return () => {
+            stopDrawing();
+          }; 
+        });
+      }
+
 
     return (
       <>
       <div className="flex flex-col"></div>
       
       <canvas className="bg-white mx-auto mt-8" ref={canvasRef} width={512} height={512} />
-      <h1 className="w-full text-center font-bold text-2xl pt-6">Add an array of images to start recording...</h1>
-      <div className="w-full h-6 flex flex-row justify-center mt-6"><input classNamee="w-full" type="file" accept="image/*" multiple onChange={handleFileInputChange} /></div>
-
-{/*       <button className="w-1/12 mt-4  mx-auto py-2 px-4 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75" onClick={ ()=>{ drawOnCanvas(canvasVideo) } }>Change Canvas</button> */}
+      <h1 className="w-full text-center font-bold text-2xl pt-6">Add array of scenes to start recording</h1>
+      
+      <button className="w-1/12 mt-4  mx-auto py-2 px-4 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75" onClick={()=>{handleScenes(scenes)}}>Add scenes to canvas</button> 
 
       {recording && <button className="w-1/12 mt-4  mx-auto py-2 px-4 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75" onClick={stopRecording}>Stop Recording</button>}
       {videoBlob && <button className="w-1/12 mt-4  mx-auto py-2 px-4 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75" onClick={downloadVideo}>Download Video</button>}
