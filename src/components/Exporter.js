@@ -5,10 +5,12 @@ const Exporter = () => {
 
     const canvasRef = useRef(null);
     const mediaRecorderRef = useRef(null);
+    const videoRef = useRef(null);
 
     const [ canvasVideo, setcanvasVideo] = useState(null);
     const [recording, setRecording] = useState(false);
     const [videoBlob, setVideoBlob] = useState(null);
+    const [downloadLink, setdownloadLink] = useState(null);
 
     const [image2Canvas, setimage2Canvas] = useState("./1.JPG");
 
@@ -45,23 +47,30 @@ const Exporter = () => {
 
       }, []);
 
-
-    function drawOnCanvas(canvasInput) {
-        
-        // Get the canvas element and its 2D rendering context
-        const ctx = canvasInput.getContext('2d');
-      
-        const image = new Image();
-        image.src = image2Canvas; // Replace with the URL or path of your image file
-        image.onload = () => {
-          ctx.drawImage(image, 0, 0); // Draw the image at position (0, 0) in the canvas
+      useEffect(() => {
+        const videoElement = videoRef.current;
+    
+        const playVideoIfVisible = () => {
+          const videoRect = videoElement.getBoundingClientRect();
+          const windowHeight = window.innerHeight || document.documentElement.clientHeight;
+    
+          // Check if the video is at least partially visible
+          if (videoRect.top < windowHeight && videoRect.bottom >= 0) {
+            videoElement.play();
+            window.removeEventListener('scroll', playVideoIfVisible);
+          }
         };
+    
+        window.addEventListener('scroll', playVideoIfVisible);
+    
+        return () => {
+          window.removeEventListener('scroll', playVideoIfVisible);
+        };
+      }, []);
 
-        //downloadCanvas(canvasInput);
-      }
 
       const downloadVideo = () => {
-        const url = URL.createObjectURL(videoBlob);
+        const url = URL.createObjectURL(downloadLink);
         const link = document.createElement('a');
         link.href = url;
         link.download = 'canvas-video.webm';
@@ -77,7 +86,8 @@ const Exporter = () => {
         mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
         mediaRecorder.onstop = () => {
           const blob = new Blob(chunks, { type: 'video/webm' });
-          setVideoBlob(blob);
+          setVideoBlob(URL.createObjectURL(blob));
+          setdownloadLink(blob);
         };
         mediaRecorder.start();
         setRecording(true);
@@ -216,7 +226,7 @@ const Exporter = () => {
         return stopDrawing;
       }
 
-      function handleFileInputChange(event) {
+/*       function handleFileInputChange(event) {
 
         const files = event.target.files;
       
@@ -237,7 +247,7 @@ const Exporter = () => {
         return () => {
           stopDrawing();
         };
-      } 
+      }  */
 
       async function loadImageFromUrl(url, sentence) {
         return fetch(url)
@@ -277,13 +287,26 @@ const Exporter = () => {
       <div className="flex flex-col"></div>
       
       <canvas className="bg-white mx-auto mt-8" ref={canvasRef} width={512} height={512} />
-      <h1 className="w-full text-center font-bold text-2xl pt-6">Add array of scenes to start recording</h1>
+      <h1 className="w-full text-center font-bold text-2xl pt-6">Click to add an array of scenes and start recording</h1>
       
-      <button className="w-1/12 mt-4  mx-auto py-2 px-4 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75" onClick={()=>{handleScenes(scenes)}}>Add scenes to canvas</button> 
+      {!recording && <button className="w-1/12 mt-4  mx-auto py-2 px-4 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75" onClick={()=>{handleScenes(scenes)}}>Start</button>}
 
       {recording && <button className="w-1/12 mt-4  mx-auto py-2 px-4 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75" onClick={stopRecording}>Stop Recording</button>}
+
+      <video
+      className="w-4/12 mt-4 mx-auto py-2 px-4"
+      ref={videoRef}
+      autoPlay
+      muted
+      loop
+      controls
+      src={videoBlob}
+      />
+      
       {videoBlob && <button className="w-1/12 mt-4  mx-auto py-2 px-4 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75" onClick={downloadVideo}>Download Video</button>}
+
       </>
+      
     );
 
 
