@@ -92,66 +92,98 @@ const Exporter = () => {
 
 
       function drawImagesPeriodically(images) {
-
+        
         const ctx = canvasVideo.getContext('2d');
         let currentIndex = 0;
         let intervalId = null;
         let alpha = 0; // The opacity of the current image
-        let durationImageScene = 2.2; //Set a value in between (1 and 2) for the duration of each image here
+        let durationImageScene = 2.2; // Set a value in between (1 and 2) for the duration of each image here
         let fps = 16; // Set the desired FPS for the animation here, 16 is assuming a 60fps refresh rate
         let prevIndex = 0;
+        let zoom = 1; // Zoom factor for the zoom-in effect
+        let currentZoom = zoom += 0.001;
+
       
         function draw() {
-          // Clear the canvas before drawing the next frame
-          ctx.clearRect(0, 0, canvasVideo.width, canvasVideo.height);
-        
+        // Clear the canvas before drawing the next frame
+        ctx.clearRect(0, 0, canvasVideo.width, canvasVideo.height);
+
+        if (currentIndex === 0) {
+          // Draw the current image, with a fading effect
+          ctx.save();
+          ctx.globalAlpha = alpha;
+          ctx.drawImage(
+            images[currentIndex].img,
+            -((zoom - 1) * canvasVideo.width) / 2,
+            -((zoom - 1) * canvasVideo.height) / 2,
+            canvasVideo.width * zoom,
+            canvasVideo.height * zoom
+          );
+          ctx.restore();
+          alpha += 0.001;
+        } else {
           // Draw the previous image, fully opaque
-          if (currentIndex !== 0) {
-            prevIndex = currentIndex === 0 ? images.length - 1 : currentIndex - 1;
-          }
-          ctx.drawImage(images[prevIndex].img, 0, 0, canvasVideo.width, canvasVideo.height);
+          prevIndex = currentIndex === 0 ? images.length - 1 : currentIndex - 1;
+/*           ctx.drawImage(
+            images[prevIndex].img,
+            2,
+            2,
+            canvasVideo.width,
+            canvasVideo.height
+          ); */
         
           // Draw the current image, with a fading effect
           ctx.save();
           ctx.globalAlpha = alpha;
-          ctx.drawImage(images[currentIndex].img, 0, 0, canvasVideo.width, canvasVideo.height);
+          ctx.drawImage(
+            images[currentIndex].img,
+            -((zoom - 1) * canvasVideo.width) / 2,
+            -((zoom - 1) * canvasVideo.height) / 2,
+            canvasVideo.width * zoom,
+            canvasVideo.height * zoom
+          );
           ctx.restore();
-        
-          const yellowBoxWidth = (canvasVideo.width * 1.2) / 2;
-          const yellowBoxHeight = 85;
-          const yellowBoxX = (canvasVideo.width - yellowBoxWidth) / 2;
-          const yellowBoxY = canvasVideo.height - (canvasVideo.height * 0.1) - yellowBoxHeight;
-        
-          // Draw the yellow background
-          ctx.fillStyle = 'yellow';
-          ctx.fillRect(yellowBoxX, yellowBoxY, yellowBoxWidth, yellowBoxHeight);
-        
-          // Draw the black border around the yellow background
-          ctx.strokeStyle = 'black';
-          ctx.lineWidth = 3;
-          ctx.strokeRect(yellowBoxX + 1, yellowBoxY, yellowBoxWidth - 2, yellowBoxHeight);
-        
-          // Split the text into lines based on line breaks
-          const textLines = images[currentIndex].sentence.split('\n');
-        
-          // Calculate the vertical position to center the text within the yellow background
-          const lineHeight = 16;
-          const textY = yellowBoxY + (yellowBoxHeight - textLines.length * lineHeight) / 2 + lineHeight;
-        
-          // Draw the text with line breaks
-          ctx.fillStyle = 'black';
-          ctx.font = '14px courier';
-          ctx.textAlign = 'center';
-        
-          textLines.forEach((line, index) => {
-            ctx.fillText(line, yellowBoxX + yellowBoxWidth / 2, textY + index * lineHeight);
-          });
-        
-          // Increment the alpha value for the current image
+        }
+      
+        const yellowBoxWidth = (canvasVideo.width * 1.2) / 2;
+        const yellowBoxHeight = 85;
+        const yellowBoxX = (canvasVideo.width - yellowBoxWidth) / 2;
+        const yellowBoxY = canvasVideo.height - (canvasVideo.height * 0.1) - yellowBoxHeight;
+      
+        // Draw the yellow background
+        ctx.fillStyle = 'yellow';
+        ctx.fillRect(yellowBoxX, yellowBoxY, yellowBoxWidth, yellowBoxHeight);
+      
+        // Draw the black border around the yellow background
+        ctx.strokeStyle = 'black';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(yellowBoxX + 1, yellowBoxY, yellowBoxWidth - 2, yellowBoxHeight);
+      
+        // Split the text into lines based on line breaks
+        const textLines = images[currentIndex].sentence.split('\n');
+      
+        // Calculate the vertical position to center the text within the yellow background
+        const lineHeight = 16;
+        const textY = yellowBoxY + (yellowBoxHeight - textLines.length * lineHeight) / 2 + lineHeight;
+      
+        // Draw the text with line breaks
+        ctx.fillStyle = 'black';
+        ctx.font = '14px courier';
+        ctx.textAlign = 'center';
+      
+        textLines.forEach((line, index) => {
+          ctx.fillText(line, yellowBoxX + yellowBoxWidth / 2, textY + index * lineHeight);
+        });
+
+                // Increment the alpha value for the current image
           alpha += 0.01;
+          // Increment the zoom value for the current image
+          zoom += 0.001;
+
           if (alpha > durationImageScene) {
             // Reset the alpha value and move on to the next image
             alpha = 0;
+            zoom = 1;
             currentIndex = currentIndex === images.length - 1 ? 0 : currentIndex + 1;
         
             if (currentIndex === 0) {
